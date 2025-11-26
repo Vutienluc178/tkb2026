@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TKB Đa User - V10 Compact</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 1. CONFIG --- */
+        :root {
+            --bg: #f0f2f5;
+            --morning: #e67e22;
+            --morning-bg: #fffbf5;
+            --afternoon: #2980b9;
+            --afternoon-bg: #f0f8ff;
+            --text: #2c3e50;
+            --border: #e1e4e8;
+            --primary: #2c3e50;
+            --danger: #e74c3c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 2. HEADER --- */
+        header {
+            flex: 0 0 auto;
+            background: #fff;
+            padding: 8px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #ddd;
+            z-index: 10;
+        }
+        
+        .user-select-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: #f1f2f6; padding: 6px 12px; border-radius: 20px;
+            cursor: pointer; border: 1px solid transparent;
+            transition: 0.2s;
+        }
+        .user-select-btn:active { background: #e1e2e6; }
+        .current-avatar { font-size: 16px; }
+        .current-name { font-size: 14px; font-weight: 700; color: var(--text); max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .caret-down { font-size: 10px; color: #777; }
+
+        .h-btn { 
+            background: var(--primary); color: #fff; border: none; 
+            padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; 
+        }
+
+        /* --- 3. GRID TỔNG QUAN (TỐI ƯU V10) --- */
+        .main-container { flex: 1; position: relative; overflow: hidden; }
+
+        #view-weekly {
+            width: 100%; height: 100%; padding: 6px;
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            /* Chiều cao tự động co giãn tùy nội dung */
+            grid-auto-rows: min-content; 
+            gap: 8px; 
+            overflow-y: auto; 
+            padding-bottom: 40px;
+        }
+
+        .grid-day {
+            background: #fff; border-radius: 8px; border: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden; cursor: pointer; position: relative;
+            /* Đảm bảo ô không bị quá cao nếu rỗng */
+            min-height: 80px; 
+        }
+        .grid-day:active { transform: scale(0.98); border-color: #aaa; }
+
+        .g-header {
+            background: #f8f9fa; font-size: 11px; font-weight: 700; text-align: center;
+            padding: 4px 0; border-bottom: 1px solid var(--border); color: #555; text-transform: uppercase;
+        }
+        .g-body { flex: 1; display: flex; flex-direction: column; }
+        
+        .g-session { flex: 1; padding: 2px 4px; display: flex; flex-direction: column; gap: 0px; }
+        .gs-sang { background: var(--morning-bg); border-bottom: 1px solid #f0f0f0; }
+        .gs-chieu { background: var(--afternoon-bg); }
+
+        /* ROW STYLING - V10 */
+        .g-row { 
+            display: flex; align-items: flex-start; 
+            font-family: 'Roboto Condensed', sans-serif; 
+            margin-bottom: 2px;
+            padding: 2px 0;
+            border-bottom: 1px dashed rgba(0,0,0,0.03);
+        }
+        .g-row:last-child { border-bottom: none; }
+
+        /* STT Tiết */
+        .g-idx { 
+            width: 14px; font-weight: 700; margin-right: 4px; flex-shrink: 0; font-size: 11px; padding-top: 1px;
+        }
+        .c-s { color: var(--morning); }
+        .c-c { color: var(--afternoon); }
+
+        /* Nội dung chính */
+        .g-info { flex: 1; min-width: 0; } /* min-width 0 giúp wrap text hoạt động trong flex */
+        
+        /* Môn học: Cho phép xuống dòng */
+        .g-main { 
+            font-size: 12px; font-weight: 700; color: #2c3e50; 
+            line-height: 1.2;
+            word-wrap: break-word; /* Cho phép xuống dòng */
+            white-space: normal;   /* Cho phép xuống dòng */
+        }
+        
+        /* Lớp: Cùng dòng hoặc dòng 2 */
+        .g-lop { font-weight: 400; color: #555; font-size: 11px; margin-left: 2px;}
+
+        /* Phòng: Badge nhỏ bên phải */
+        .g-room { 
+            float: right;
+            background: #fff; border: 1px solid #ddd; 
+            padding: 0 4px; border-radius: 4px; 
+            font-size: 10px; font-weight: 600; color: #333;
+            margin-left: 4px; margin-top: 1px;
+        }
+
+        /* Ghi chú: Dòng riêng, chữ nhỏ */
+        .g-note { font-size: 10px; color: #7f8c8d; font-style: italic; display: block; margin-top: 1px; line-height: 1.1; }
+
+        /* Tiết trống: Ẩn bớt để gọn */
+        .row-empty { height: 12px; align-items: center; }
+        .row-empty .g-idx { font-size: 9px; opacity: 0.3; font-weight: 400; }
+        .row-empty .g-info { display: none; } /* Giấu luôn nội dung nếu trống */
+
+        .no-data { color: #ccc; font-weight: 400; font-size: 10px; }
+
+        /* --- 4. MODAL NHẬP LIỆU --- */
+        #view-daily {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #f2f2f2; z-index: 20; display: flex; flex-direction: column;
+            transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #view-daily.active { transform: translateY(0); }
+
+        .daily-nav { background: #fff; padding: 10px; display: flex; align-items: center; border-bottom: 1px solid #ddd; }
+        .btn-back { border: none; background: none; font-size: 20px; margin-right: 15px; cursor: pointer; color: #555; }
+        .daily-title { font-size: 16px; font-weight: 700; flex: 1; }
+        .daily-content { flex: 1; overflow-y: auto; padding: 10px; }
+        
+        .form-card { background: #fff; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .fc-head { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+        .fc-head.s { color: var(--morning); }
+        .fc-head.c { color: var(--afternoon); }
+
+        .inp-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-start; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+        .inp-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .inp-idx { width: 20px; font-weight: 700; color: #999; font-size: 14px; padding-top: 8px; }
+        .inp-wrap { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        
+        input { width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 4px; font-size: 14px; -webkit-appearance: none; }
+        input:focus { border-color: #aaa; }
+        .row-detail { display: flex; gap: 6px; }
+        .row-detail input { font-size: 13px; background: #fafafa; }
+        
+        .inp-note { font-size: 12px; font-style: italic; color: #666; border: none; border-bottom: 1px solid #f0f0f0; background: transparent; padding: 4px 0; }
+        .inp-note:focus { border-bottom-color: var(--afternoon); }
+
+        .btn-save-close { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+
+        /* --- 5. MODAL USER & CONFIRM --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 50;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        
+        .user-panel {
+            background: #fff; width: 90%; max-width: 350px; border-radius: 12px;
+            overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; max-height: 80vh;
+        }
+        .up-header { padding: 15px; background: #f8f9fa; font-weight: 700; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .up-list { overflow-y: auto; flex: 1; }
+        .user-item { padding: 12px 15px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .user-item.active { background: #f0f7ff; }
+        .u-check { color: var(--afternoon); font-weight: bold; display: none; }
+        .user-item.active .u-check { display: block; }
+        .u-del { color: #e74c3c; font-size: 12px; padding: 5px 10px; border: 1px solid #eee; border-radius: 4px; }
+        .up-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
+        .add-user-form { display: flex; flex-direction: column; gap: 10px; }
+        .new-user-input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 14px; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-add-action { flex: 1; padding: 10px; background: var(--afternoon); color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { flex: 1; padding: 10px; background: #f1f2f6; border: none; border-radius: 6px; color: #333; cursor: pointer; }
+
+        .confirm-box { background: #fff; width: 85%; max-width: 300px; padding: 20px; border-radius: 12px; text-align: center; }
+        .confirm-title { font-weight: 700; font-size: 16px; margin-bottom: 10px; }
+        .confirm-msg { font-size: 14px; color: #555; margin-bottom: 20px; }
+        .confirm-btns { display: flex; gap: 10px; }
+        .btn-yes { flex: 1; background: var(--danger); color: #fff; padding: 10px; border-radius: 6px; border: none; font-weight: 600; }
+        .btn-no { flex: 1; background: #f1f2f6; color: #333; padding: 10px; border-radius: 6px; border: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="user-select-btn" onclick="openUserModal()">
+            <span class="current-avatar">👤</span>
+            <span class="current-name" id="display-name">Thầy Lực</span>
+            <span class="caret-down">▼</span>
+        </div>
+        <button class="h-btn" onclick="window.print()">🖨 IN LỊCH</button>
+    </header>
+
+    <div class="main-container">
+        <!-- VIEW WEEKLY -->
+        <div id="view-weekly"></div>
+
+        <!-- VIEW DAILY EDIT -->
+        <div id="view-daily">
+            <div class="daily-nav">
+                <button class="btn-back" onclick="closeEdit()">✕</button>
+                <div class="daily-title" id="edit-title">Thứ 2</div>
+                <button style="color:var(--danger); background:none; border:none; font-weight:600; font-size:12px;" onclick="reqDeleteDay()">Xoá</button>
+            </div>
+            <div class="daily-content">
+                <div class="form-card">
+                    <div class="fc-head s">☀️ SÁNG</div>
+                    <div id="form-sang"></div>
+                </div>
+                <div class="form-card">
+                    <div class="fc-head c">🌤 CHIỀU</div>
+                    <div id="form-chieu"></div>
+                </div>
+                <div style="height: 50px;"></div>
+            </div>
+            <button class="btn-save-close" onclick="closeEdit()">LƯU & ĐÓNG</button>
+        </div>
+    </div>
+
+    <!-- MODAL USER -->
+    <div id="modal-users" class="modal-overlay">
+        <div class="user-panel">
+            <div class="up-header">
+                <span>Danh sách TKB</span>
+                <span style="font-size: 18px; cursor: pointer; padding:5px;" onclick="closeUserModal()">✕</span>
+            </div>
+            <div class="up-list" id="user-list-container"></div>
+            <div class="up-footer">
+                <button id="btn-show-add" class="btn-add-action" onclick="showAddFormUI()">+ Tạo thời khoá biểu mới</button>
+                <div id="form-add-user" class="add-user-form" style="display: none;">
+                    <input type="text" id="new-user-input" class="new-user-input" placeholder="Nhập tên (VD: Lớp Dạy Thêm)">
+                    <div class="btn-row">
+                        <button class="btn-add-action" onclick="submitNewUser()">Lưu</button>
+                        <button class="btn-cancel" onclick="hideAddFormUI()">Huỷ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRM -->
+    <div id="modal-confirm" class="modal-overlay">
+        <div class="confirm-box">
+            <div class="confirm-title" id="confirm-title">Xác nhận xoá?</div>
+            <div class="confirm-msg" id="confirm-msg"></div>
+            <div class="confirm-btns">
+                <button class="btn-yes" id="btn-confirm-yes">Xoá ngay</button>
+                <button class="btn-no" onclick="closeConfirm()">Huỷ</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- CONFIG ---
+    const KEY_PROFILES = 'tkb_v6_profiles';
+    const KEY_CURRENT_ID = 'tkb_v6_curr_id';
+    const DATA_PREFIX = 'tkb_v6_data_';
+    const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    const DAY_LABELS = {'T2':'Thứ 2', 'T3':'Thứ 3', 'T4':'Thứ 4', 'T5':'Thứ 5', 'T6':'Thứ 6', 'T7':'Thứ 7', 'CN':'Chủ Nhật'};
+    
+    let profiles = [], currentUserId = null, currentEditDay = 'T2';
+
+    // --- INIT ---
+    function initApp() {
+        const rawProfiles = localStorage.getItem(KEY_PROFILES);
+        profiles = rawProfiles ? JSON.parse(rawProfiles) : [{ id: 'user_default', name: 'Thầy Lực' }];
+        saveProfiles();
+
+        const storedId = localStorage.getItem(KEY_CURRENT_ID);
+        currentUserId = (storedId && profiles.find(p => p.id === storedId)) ? storedId : profiles[0].id;
+        saveCurrentId();
+        updateUI();
+    }
+    function saveProfiles() { localStorage.setItem(KEY_PROFILES, JSON.stringify(profiles)); }
+    function saveCurrentId() { localStorage.setItem(KEY_CURRENT_ID, currentUserId); }
+    function updateUI() {
+        const currUser = profiles.find(p => p.id === currentUserId);
+        if (currUser) document.getElementById('display-name').innerText = currUser.name;
+        renderGrid();
+    }
+
+    // --- USER MANAGEMENT ---
+    function openUserModal() { renderUserList(); hideAddFormUI(); document.getElementById('modal-users').classList.add('active'); }
+    function closeUserModal() { document.getElementById('modal-users').classList.remove('active'); }
+    function renderUserList() {
+        const c = document.getElementById('user-list-container');
+        c.innerHTML = profiles.map(p => `
+            <div class="user-item ${p.id === currentUserId ? 'active' : ''}" onclick="switchUser('${p.id}')">
+                <div class="u-name">${p.name}</div>
+                ${p.id === currentUserId ? '<div class="u-check">✓</div>' : `<div class="u-del" onclick="reqDeleteUser(event, '${p.id}', '${p.name}')">Xoá</div>`}
+            </div>`).join('');
+    }
+    function switchUser(id) { currentUserId = id; saveCurrentId(); updateUI(); renderUserList(); }
+    function showAddFormUI() { document.getElementById('btn-show-add').style.display = 'none'; document.getElementById('form-add-user').style.display = 'flex'; document.getElementById('new-user-input').focus(); }
+    function hideAddFormUI() { document.getElementById('new-user-input').value = ''; document.getElementById('form-add-user').style.display = 'none'; document.getElementById('btn-show-add').style.display = 'block'; }
+    function submitNewUser() {
+        const name = document.getElementById('new-user-input').value.trim();
+        if (!name) return;
+        const newId = 'user_' + Date.now();
+        profiles.push({ id: newId, name });
+        saveProfiles();
+        switchUser(newId);
+        closeUserModal();
+    }
+
+    // --- CONFIRMATION ---
+    function showConfirm(t, m, cb) {
+        document.getElementById('confirm-title').innerText = t;
+        document.getElementById('confirm-msg').innerText = m;
+        document.getElementById('btn-confirm-yes').onclick = () => { cb(); closeConfirm(); };
+        document.getElementById('modal-confirm').classList.add('active');
+    }
+    function closeConfirm() { document.getElementById('modal-confirm').classList.remove('active'); }
+    function reqDeleteUser(e, id, name) {
+        e.stopPropagation();
+        if (profiles.length <= 1) return alert("Phải giữ lại ít nhất 1 TKB!");
+        showConfirm("Xoá TKB?", `Xoá vĩnh viễn TKB "${name}"?`, () => {
+            DAYS.forEach(d => localStorage.removeItem(DATA_PREFIX + id + '_' + d));
+            profiles = profiles.filter(p => p.id !== id);
+            if (id === currentUserId) currentUserId = profiles[0].id;
+            saveProfiles(); saveCurrentId(); updateUI(); renderUserList();
+        });
+    }
+    function reqDeleteDay() {
+        showConfirm("Xoá ngày?", `Xoá dữ liệu ${document.getElementById('edit-title').innerText}?`, () => {
+            localStorage.removeItem(getUserDataKey(currentEditDay));
+            document.querySelectorAll('.auto-save').forEach(e => e.value = '');
+        });
+    }
+
+    // --- TIMETABLE LOGIC ---
+    function getUserDataKey(d) { return DATA_PREFIX + currentUserId + '_' + d; }
+
+    function renderGrid() {
+        const c = document.getElementById('view-weekly');
+        let html = '';
+        DAYS.forEach(d => {
+            const raw = localStorage.getItem(getUserDataKey(d));
+            const data = raw ? JSON.parse(raw) : {};
+            const getRow = (pf, i, clr) => {
+                const m = data[`${pf}${i}_mon`];
+                const l = data[`${pf}${i}_lop`];
+                const p = data[`${pf}${i}_phong`];
+                const n = data[`${pf}${i}_note`];
+                
+                if (m || l || p || n) {
+                    let sub = '';
+                    if (l) sub += '(' + l + ')'; // Gộp lớp vào ngoặc
+                    let roomBadge = p ? `<span class="g-room">${p}</span>` : '';
+                    let noteHtml = n ? `<span class="g-note">📝 ${n}</span>` : '';
+
+                    // V10: Nội dung chính hiển thị Môn + Lớp
+                    return `
+                    <div class="g-row">
+                        <span class="g-idx ${clr}">${i}</span>
+                        <div class="g-info">
+                            <div class="g-main">
+                                ${m || ''} <span class="g-lop">${sub}</span>
+                                ${roomBadge}
+                            </div>
+                            ${noteHtml}
+                        </div>
+                    </div>`;
+                }
+                // V10: Tiết trống chỉ hiện số thứ tự mờ
+                return `<div class="g-row row-empty"><span class="g-idx ${clr}">${i}</span><div class="g-info"></div></div>`;
+            };
+
+            let rS='', rC='';
+            for(let i=1; i<=4; i++) { rS+=getRow('s_',i,'c-s'); rC+=getRow('c_',i,'c-c'); }
+            
+            html += `<div class="grid-day" onclick="openEdit('${d}')">
+                <div class="g-header">${DAY_LABELS[d]}</div>
+                <div class="g-body"><div class="g-session gs-sang">${rS}</div><div class="g-session gs-chieu">${rC}</div></div>
+            </div>`;
+        });
+        html += `<div class="grid-day" style="background:#f8f9fa; border-style:dashed; justify-content:center; align-items:center; color:#999; font-size:11px; padding:10px; text-align:center;" onclick="openUserModal()"><span style="font-size:20px; margin-bottom:5px;">👥</span><br>Quản lý<br>User</div>`;
+        c.innerHTML = html;
+    }
+
+    function renderForms(pf, id) {
+        let h = '';
+        for(let i=1; i<=4; i++) {
+            h += `
+            <div class="inp-row">
+                <div class="inp-idx">${i}</div>
+                <div class="inp-wrap">
+                    <input type="text" class="auto-save" id="${pf}${i}_mon" placeholder="Môn học (VD: Toán)">
+                    <div class="row-detail">
+                        <input type="text" class="auto-save" id="${pf}${i}_lop" placeholder="Lớp">
+                        <input type="text" class="auto-save" id="${pf}${i}_phong" placeholder="Phòng">
+                    </div>
+                    <input type="text" class="auto-save inp-note" id="${pf}${i}_note" placeholder="Ghi chú (tuỳ chọn)...">
+                </div>
+            </div>`;
+        }
+        document.getElementById(id).innerHTML = h;
+    }
+    renderForms('s_', 'form-sang');
+    renderForms('c_', 'form-chieu');
+
+    const inputs = document.querySelectorAll('.auto-save');
+    function openEdit(d) {
+        currentEditDay = d;
+        document.getElementById('edit-title').innerText = DAY_LABELS[d];
+        inputs.forEach(e => e.value = '');
+        const raw = localStorage.getItem(getUserDataKey(d));
+        if (raw) {
+            const data = JSON.parse(raw);
+            inputs.forEach(e => { if(data[e.id]) e.value = data[e.id]; });
+        }
+        document.getElementById('view-daily').classList.add('active');
+    }
+    function closeEdit() { document.getElementById('view-daily').classList.remove('active'); renderGrid(); }
+    function saveData() {
+        const d = {}; let h=false;
+        inputs.forEach(e => { if(e.value.trim()){ d[e.id]=e.value; h=true; } });
+        const k = getUserDataKey(currentEditDay);
+        if(h) localStorage.setItem(k, JSON.stringify(d)); else localStorage.removeItem(k);
+    }
+    inputs.forEach(e => e.addEventListener('input', saveData));
+
+    initApp();
+</script>
+</body>
+</html>
