@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TKB Đa User - V10 Compact</title>
+    <title>TKB V11 Pro - Sao lưu</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +21,7 @@
             --border: #e1e4e8;
             --primary: #2c3e50;
             --danger: #e74c3c;
+            --highlight: #27ae60; /* Màu cho ngày hôm nay */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -61,14 +62,13 @@
             padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; 
         }
 
-        /* --- 3. GRID TỔNG QUAN (TỐI ƯU V10) --- */
+        /* --- 3. GRID TỔNG QUAN --- */
         .main-container { flex: 1; position: relative; overflow: hidden; }
 
         #view-weekly {
             width: 100%; height: 100%; padding: 6px;
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            /* Chiều cao tự động co giãn tùy nội dung */
             grid-auto-rows: min-content; 
             gap: 8px; 
             overflow-y: auto; 
@@ -78,10 +78,21 @@
         .grid-day {
             background: #fff; border-radius: 8px; border: 1px solid var(--border);
             display: flex; flex-direction: column; overflow: hidden; cursor: pointer; position: relative;
-            /* Đảm bảo ô không bị quá cao nếu rỗng */
             min-height: 80px; 
+            transition: 0.2s;
         }
         .grid-day:active { transform: scale(0.98); border-color: #aaa; }
+
+        /* Highlight TODAY */
+        .grid-day.is-today {
+            border: 2px solid var(--highlight);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.15);
+        }
+        .grid-day.is-today .g-header {
+            background: var(--highlight);
+            color: #fff;
+            font-weight: 900;
+        }
 
         .g-header {
             background: #f8f9fa; font-size: 11px; font-weight: 700; text-align: center;
@@ -93,7 +104,6 @@
         .gs-sang { background: var(--morning-bg); border-bottom: 1px solid #f0f0f0; }
         .gs-chieu { background: var(--afternoon-bg); }
 
-        /* ROW STYLING - V10 */
         .g-row { 
             display: flex; align-items: flex-start; 
             font-family: 'Roboto Condensed', sans-serif; 
@@ -103,43 +113,17 @@
         }
         .g-row:last-child { border-bottom: none; }
 
-        /* STT Tiết */
-        .g-idx { 
-            width: 14px; font-weight: 700; margin-right: 4px; flex-shrink: 0; font-size: 11px; padding-top: 1px;
-        }
+        .g-idx { width: 14px; font-weight: 700; margin-right: 4px; flex-shrink: 0; font-size: 11px; padding-top: 1px; }
         .c-s { color: var(--morning); }
         .c-c { color: var(--afternoon); }
-
-        /* Nội dung chính */
-        .g-info { flex: 1; min-width: 0; } /* min-width 0 giúp wrap text hoạt động trong flex */
-        
-        /* Môn học: Cho phép xuống dòng */
-        .g-main { 
-            font-size: 12px; font-weight: 700; color: #2c3e50; 
-            line-height: 1.2;
-            word-wrap: break-word; /* Cho phép xuống dòng */
-            white-space: normal;   /* Cho phép xuống dòng */
-        }
-        
-        /* Lớp: Cùng dòng hoặc dòng 2 */
+        .g-info { flex: 1; min-width: 0; }
+        .g-main { font-size: 12px; font-weight: 700; color: #2c3e50; line-height: 1.2; word-wrap: break-word; white-space: normal; }
         .g-lop { font-weight: 400; color: #555; font-size: 11px; margin-left: 2px;}
-
-        /* Phòng: Badge nhỏ bên phải */
-        .g-room { 
-            float: right;
-            background: #fff; border: 1px solid #ddd; 
-            padding: 0 4px; border-radius: 4px; 
-            font-size: 10px; font-weight: 600; color: #333;
-            margin-left: 4px; margin-top: 1px;
-        }
-
-        /* Ghi chú: Dòng riêng, chữ nhỏ */
+        .g-room { float: right; background: #fff; border: 1px solid #ddd; padding: 0 4px; border-radius: 4px; font-size: 10px; font-weight: 600; color: #333; margin-left: 4px; margin-top: 1px; }
         .g-note { font-size: 10px; color: #7f8c8d; font-style: italic; display: block; margin-top: 1px; line-height: 1.1; }
-
-        /* Tiết trống: Ẩn bớt để gọn */
         .row-empty { height: 12px; align-items: center; }
         .row-empty .g-idx { font-size: 9px; opacity: 0.3; font-weight: 400; }
-        .row-empty .g-info { display: none; } /* Giấu luôn nội dung nếu trống */
+        .row-empty .g-info { display: none; }
 
         .no-data { color: #ccc; font-weight: 400; font-size: 10px; }
 
@@ -171,13 +155,11 @@
         input:focus { border-color: #aaa; }
         .row-detail { display: flex; gap: 6px; }
         .row-detail input { font-size: 13px; background: #fafafa; }
-        
         .inp-note { font-size: 12px; font-style: italic; color: #666; border: none; border-bottom: 1px solid #f0f0f0; background: transparent; padding: 4px 0; }
         .inp-note:focus { border-bottom-color: var(--afternoon); }
-
         .btn-save-close { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
 
-        /* --- 5. MODAL USER & CONFIRM --- */
+        /* --- 5. MODAL USER & SETTINGS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 50;
@@ -188,16 +170,26 @@
         .user-panel {
             background: #fff; width: 90%; max-width: 350px; border-radius: 12px;
             overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: flex; flex-direction: column; max-height: 80vh;
+            display: flex; flex-direction: column; max-height: 85vh;
         }
         .up-header { padding: 15px; background: #f8f9fa; font-weight: 700; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .up-list { overflow-y: auto; flex: 1; }
+        .up-list { overflow-y: auto; flex: 1; max-height: 200px; }
         .user-item { padding: 12px 15px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .user-item.active { background: #f0f7ff; }
         .u-check { color: var(--afternoon); font-weight: bold; display: none; }
         .user-item.active .u-check { display: block; }
         .u-del { color: #e74c3c; font-size: 12px; padding: 5px 10px; border: 1px solid #eee; border-radius: 4px; }
-        .up-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
+        
+        .up-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* Backup Section Styles */
+        .backup-section { border-top: 1px dashed #ddd; margin-top: 5px; padding-top: 15px; }
+        .backup-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 8px; text-transform: uppercase; }
+        .backup-btns { display: flex; gap: 10px; }
+        .btn-bk { flex: 1; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; border: 1px solid #ddd; }
+        .btn-export { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+        .btn-import { background: #fff3e0; color: #ef6c00; border-color: #ffe0b2; }
+
         .add-user-form { display: flex; flex-direction: column; gap: 10px; }
         .new-user-input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 14px; }
         .btn-row { display: flex; gap: 8px; }
@@ -249,21 +241,33 @@
         </div>
     </div>
 
-    <!-- MODAL USER -->
+    <!-- MODAL USER & SETTINGS -->
     <div id="modal-users" class="modal-overlay">
         <div class="user-panel">
             <div class="up-header">
-                <span>Danh sách TKB</span>
+                <span>Quản lý & Cài đặt</span>
                 <span style="font-size: 18px; cursor: pointer; padding:5px;" onclick="closeUserModal()">✕</span>
             </div>
             <div class="up-list" id="user-list-container"></div>
+            
             <div class="up-footer">
+                <!-- User Actions -->
                 <button id="btn-show-add" class="btn-add-action" onclick="showAddFormUI()">+ Tạo thời khoá biểu mới</button>
                 <div id="form-add-user" class="add-user-form" style="display: none;">
                     <input type="text" id="new-user-input" class="new-user-input" placeholder="Nhập tên (VD: Lớp Dạy Thêm)">
                     <div class="btn-row">
                         <button class="btn-add-action" onclick="submitNewUser()">Lưu</button>
                         <button class="btn-cancel" onclick="hideAddFormUI()">Huỷ</button>
+                    </div>
+                </div>
+
+                <!-- Backup Section -->
+                <div class="backup-section">
+                    <div class="backup-label">An toàn dữ liệu</div>
+                    <div class="backup-btns">
+                        <button class="btn-bk btn-export" onclick="exportData()">⬇ Tải lưu trữ</button>
+                        <button class="btn-bk btn-import" onclick="document.getElementById('file-upload').click()">⬆ Nạp dữ liệu</button>
+                        <input type="file" id="file-upload" style="display: none;" onchange="importData(this)" accept=".json">
                     </div>
                 </div>
             </div>
@@ -310,6 +314,65 @@
         if (currUser) document.getElementById('display-name').innerText = currUser.name;
         renderGrid();
     }
+
+    // --- BACKUP & RESTORE LOGIC (NEW) ---
+    function exportData() {
+        const data = {};
+        // Lưu profiles
+        data[KEY_PROFILES] = localStorage.getItem(KEY_PROFILES);
+        data[KEY_CURRENT_ID] = localStorage.getItem(KEY_CURRENT_ID);
+        
+        // Lưu dữ liệu của tất cả users
+        profiles.forEach(p => {
+            DAYS.forEach(d => {
+                const key = DATA_PREFIX + p.id + '_' + d;
+                const val = localStorage.getItem(key);
+                if(val) data[key] = val;
+            });
+        });
+
+        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0,10);
+        a.download = `TKB_ThayLuc_Backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function importData(input) {
+        const file = input.files[0];
+        if(!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                if(confirm("Thầy có chắc muốn nạp dữ liệu này? Dữ liệu hiện tại sẽ bị thay thế.")) {
+                    // Xóa dữ liệu cũ liên quan đến app
+                    Object.keys(localStorage).forEach(k => {
+                        if(k.startsWith('tkb_v6_')) localStorage.removeItem(k);
+                    });
+
+                    // Nạp dữ liệu mới
+                    for (const key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                    
+                    alert("Đã khôi phục thành công!");
+                    location.reload(); // Tải lại trang để áp dụng
+                }
+            } catch(err) {
+                alert("File không hợp lệ hoặc bị lỗi!");
+            }
+        };
+        reader.readAsText(file);
+        input.value = ''; // Reset input
+    }
+
 
     // --- USER MANAGEMENT ---
     function openUserModal() { renderUserList(); hideAddFormUI(); document.getElementById('modal-users').classList.add('active'); }
@@ -363,12 +426,22 @@
     // --- TIMETABLE LOGIC ---
     function getUserDataKey(d) { return DATA_PREFIX + currentUserId + '_' + d; }
 
+    function getTodayCode() {
+        const dayIdx = new Date().getDay(); // 0 is Sunday
+        if (dayIdx === 0) return 'CN';
+        return 'T' + (dayIdx + 1);
+    }
+
     function renderGrid() {
         const c = document.getElementById('view-weekly');
+        const today = getTodayCode();
         let html = '';
+        
         DAYS.forEach(d => {
             const raw = localStorage.getItem(getUserDataKey(d));
             const data = raw ? JSON.parse(raw) : {};
+            const isToday = (d === today) ? 'is-today' : '';
+            
             const getRow = (pf, i, clr) => {
                 const m = data[`${pf}${i}_mon`];
                 const l = data[`${pf}${i}_lop`];
@@ -377,11 +450,10 @@
                 
                 if (m || l || p || n) {
                     let sub = '';
-                    if (l) sub += '(' + l + ')'; // Gộp lớp vào ngoặc
+                    if (l) sub += '(' + l + ')'; 
                     let roomBadge = p ? `<span class="g-room">${p}</span>` : '';
                     let noteHtml = n ? `<span class="g-note">📝 ${n}</span>` : '';
 
-                    // V10: Nội dung chính hiển thị Môn + Lớp
                     return `
                     <div class="g-row">
                         <span class="g-idx ${clr}">${i}</span>
@@ -394,20 +466,25 @@
                         </div>
                     </div>`;
                 }
-                // V10: Tiết trống chỉ hiện số thứ tự mờ
                 return `<div class="g-row row-empty"><span class="g-idx ${clr}">${i}</span><div class="g-info"></div></div>`;
             };
 
             let rS='', rC='';
             for(let i=1; i<=4; i++) { rS+=getRow('s_',i,'c-s'); rC+=getRow('c_',i,'c-c'); }
             
-            html += `<div class="grid-day" onclick="openEdit('${d}')">
+            html += `<div class="grid-day ${isToday}" onclick="openEdit('${d}')">
                 <div class="g-header">${DAY_LABELS[d]}</div>
                 <div class="g-body"><div class="g-session gs-sang">${rS}</div><div class="g-session gs-chieu">${rC}</div></div>
             </div>`;
         });
         html += `<div class="grid-day" style="background:#f8f9fa; border-style:dashed; justify-content:center; align-items:center; color:#999; font-size:11px; padding:10px; text-align:center;" onclick="openUserModal()"><span style="font-size:20px; margin-bottom:5px;">👥</span><br>Quản lý<br>User</div>`;
         c.innerHTML = html;
+        
+        // Auto scroll to today if exists
+        setTimeout(() => {
+            const todayEl = document.querySelector('.is-today');
+            if(todayEl) todayEl.scrollIntoView({behavior: "smooth", block: "center"});
+        }, 300);
     }
 
     function renderForms(pf, id) {
